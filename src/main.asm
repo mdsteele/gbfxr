@@ -26,9 +26,56 @@ Main::
     ld a, LCDCF_OFF
     ld [rLCDC], a
 
+    ;; Write BG tiles into VRAM.
+    ld hl, VramBgTiles + 16 * 33            ; dest
+    ld de, RomFontTiles                     ; src
+    ld bc, RomFontTiles.end - RomFontTiles  ; count
+    call MemCopy
+
     ;; Initialize background palette.
     ld a, %11100100
     ldh [rBGP], a
+
+    ;; Initialize background map.
+    ld hl, VramBgMap + 2 +  1 * 32  ; dest
+    ld de, Strings.channel          ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 +  2 * 32  ; dest
+    ld de, Strings.duty             ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 +  3 * 32  ; dest
+    ld de, Strings.length           ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 +  4 * 32  ; dest
+    ld de, Strings.envInit          ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 +  5 * 32  ; dest
+    ld de, Strings.envSweepAmt      ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 +  6 * 32  ; dest
+    ld de, Strings.freqInit         ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 +  7 * 32  ; dest
+    ld de, Strings.freqSweepAmt     ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 +  8 * 32  ; dest
+    ld de, Strings.freqSweepLen     ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 + 12 * 32  ; dest
+    ld de, Strings.reg0             ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 + 13 * 32  ; dest
+    ld de, Strings.reg1             ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 + 14 * 32  ; dest
+    ld de, Strings.reg2             ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 + 15 * 32  ; dest
+    ld de, Strings.reg3             ; src
+    call StrCopy
+    ld hl, VramBgMap + 2 + 16 * 32  ; dest
+    ld de, Strings.reg4             ; src
+    call StrCopy
 
     ;; Initialize obj palettes.
     ld a, %11100100

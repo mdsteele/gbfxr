@@ -2,8 +2,11 @@
 
 SRCDIR = src
 OUTDIR = out
+BINDIR = $(OUTDIR)/bin
+DATADIR = $(OUTDIR)/data
 OBJDIR = $(OUTDIR)/obj
 ROMFILE = $(OUTDIR)/gbfxr.gb
+AHI_TO_2BPP = $(BINDIR)/ahi_to_2bpp
 
 ASMFILES := $(shell find $(SRCDIR) -name '*.asm')
 OBJFILES := $(patsubst $(SRCDIR)/%.asm,$(OBJDIR)/%.o,$(ASMFILES))
@@ -23,6 +26,16 @@ clean:
 
 #=============================================================================#
 
+$(AHI_TO_2BPP): build/ahi_to_2bpp.c
+	@mkdir -p $(@D)
+	cc -o $@ $<
+
+$(DATADIR)/font.2bpp: $(SRCDIR)/font.ahi $(AHI_TO_2BPP)
+	@mkdir -p $(@D)
+	$(AHI_TO_2BPP) < $< > $@
+
+#=============================================================================#
+
 $(ROMFILE): $(OBJFILES)
 	@mkdir -p $(@D)
 	rgblink -o $@ $^
@@ -32,6 +45,9 @@ define compile-asm
 	@mkdir -p $(@D)
 	rgbasm -o $@ $<
 endef
+
+$(OBJDIR)/data.o: $(SRCDIR)/data.asm $(DATADIR)/font.2bpp
+	$(compile-asm)
 
 $(OBJDIR)/header.o: $(SRCDIR)/header.asm $(SRCDIR)/hardware.inc
 	$(compile-asm)

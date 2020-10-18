@@ -32,6 +32,18 @@ MemZero::
     dec bc
     jr .loop
 
+;;; Copies bytes from a NUL-terminated string.
+;;; @param hl Destination start address.
+;;; @param de Source start address.
+StrCopy::
+    .loop
+    ld a, [de]
+    or a
+    ret z
+    ld [hl+], a
+    inc de
+    jr .loop
+
 ;;; Blocks until the next VBlank, then performs an OAM DMA.
 AwaitRedraw::
     di    ; "Lock"
