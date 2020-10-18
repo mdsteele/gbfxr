@@ -5,6 +5,11 @@ RomFontTiles::
     INCBIN "out/data/font.2bpp"
     .end::
 
+SECTION "Obj-Tile-Data", ROMX
+RomObjTiles::
+    INCBIN "out/data/sprites.2bpp"
+    .end::
+
 ;;;=========================================================================;;;
 
 SECTION "Strings", ROMX

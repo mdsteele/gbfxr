@@ -30,9 +30,16 @@ $(AHI_TO_2BPP): build/ahi_to_2bpp.c
 	@mkdir -p $(@D)
 	cc -o $@ $<
 
-$(DATADIR)/font.2bpp: $(SRCDIR)/font.ahi $(AHI_TO_2BPP)
+define convert-ahi
 	@mkdir -p $(@D)
 	$(AHI_TO_2BPP) < $< > $@
+endef
+
+$(DATADIR)/font.2bpp: $(SRCDIR)/font.ahi $(AHI_TO_2BPP)
+	$(convert-ahi)
+
+$(DATADIR)/sprites.2bpp: $(SRCDIR)/sprites.ahi $(AHI_TO_2BPP)
+	$(convert-ahi)
 
 #=============================================================================#
 
@@ -46,7 +53,8 @@ define compile-asm
 	rgbasm -o $@ $<
 endef
 
-$(OBJDIR)/data.o: $(SRCDIR)/data.asm $(DATADIR)/font.2bpp
+$(OBJDIR)/data.o: $(SRCDIR)/data.asm $(DATADIR)/font.2bpp \
+                  $(DATADIR)/sprites.2bpp
 	$(compile-asm)
 
 $(OBJDIR)/header.o: $(SRCDIR)/header.asm $(SRCDIR)/hardware.inc

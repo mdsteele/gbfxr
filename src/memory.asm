@@ -2,17 +2,29 @@ INCLUDE "src/hardware.inc"
 
 ;;;=========================================================================;;;
 
+SECTION "Menu-State", WRAM0
+HoldingDpad::
+    DB
+MenuCursorRow::
+    DB
+MenuChannel::
+    DB
+ChangedChannel::
+    DB
+
+;;;=========================================================================;;;
+
 SECTION "Shadow-OAM", WRAM0, ALIGN[8]
 ShadowOam::
 UNION
     DS 4 * 40
 NEXTU
 
-CursorYPos::
+ObjCursorYPos::
     DB
-CursorXPos::
+ObjCursorXPos::
     DB
-CursorObj::
+ObjCursorTile::
     DB
     DB
 

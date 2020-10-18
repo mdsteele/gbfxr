@@ -3,6 +3,11 @@ INCLUDE "src/macros.inc"
 
 ;;;=========================================================================;;;
 
+DPAD_REPEAT_DELAY EQU 24
+DPAD_REPEAT_PERIOD EQU 4
+
+;;;=========================================================================;;;
+
 SECTION "Main", ROM0[$0150]
 Main::
     ;; Initialize the stack.
@@ -14,10 +19,25 @@ Main::
     ld bc, OamDmaCodeEnd - OamDmaCode  ; count
     call MemCopy
 
+    ;; Initialize menu state.
+    ld a, 1
+    ld [MenuChannel], a
+    xor a
+    ld [HoldingDpad], a
+    ld [MenuCursorRow], a
+    ld [ChangedChannel], a
+
     ;; Clear the shadow OAM.
     ld hl, ShadowOam                 ; dest
     ld bc, ShadowOamEnd - ShadowOam  ; count
     call MemZero
+
+    ld a, 24
+    ld [ObjCursorYPos], a
+    ld a, 15
+    ld [ObjCursorXPos], a
+    ld a, 1
+    ld [ObjCursorTile], a
 
     ;; Turn off the LCD.
     .waitForVBlank
@@ -32,9 +52,17 @@ Main::
     ld bc, RomFontTiles.end - RomFontTiles  ; count
     call MemCopy
 
-    ;; Initialize background palette.
+    ;; Write obj tiles into VRAM.
+    ld hl, VramObjTiles + 16 * 1          ; dest
+    ld de, RomObjTiles                    ; src
+    ld bc, RomObjTiles.end - RomObjTiles  ; count
+    call MemCopy
+
+    ;; Initialize palettes.
     ld a, %11100100
     ldh [rBGP], a
+    ldh [rOBP0], a
+    ldh [rOBP1], a
 
     ;; Initialize background map.
     ld hl, VramBgMap + 2 +  1 * 32  ; dest
@@ -101,7 +129,141 @@ Main::
 
 RunLoop:
     call AwaitRedraw
+UpdateBg:
+    ld a, [ChangedChannel]
+    or a
+    call nz, UpdateBgForChannel
+ReadButtons:
     call StoreButtonStateInB
+    ld a, b
+    and PADF_UP | PADF_DOWN | PADF_LEFT | PADF_RIGHT
+    jr nz, .dpadActive
+    xor a
+    ld [HoldingDpad], a
+    jr RunLoop
+    .dpadActive
+    ld a, [HoldingDpad]
+    inc a
+    if_lt DPAD_REPEAT_DELAY + DPAD_REPEAT_PERIOD, jr, .noRepeat
+    ld a, DPAD_REPEAT_DELAY
+    .noRepeat
+    ld [HoldingDpad], a
+    if_eq 1, jr, MoveCursor
+    if_eq DPAD_REPEAT_DELAY, jr, MoveCursor
+    jr RunLoop
+MoveCursor:
+    ld a, b
+    and PADF_DOWN
+    jp nz, MoveCursorDown
+    ld a, b
+    and PADF_UP
+    jp nz, MoveCursorUp
+    ld a, b
+    and PADF_LEFT | PADF_RIGHT
+    jp z, RunLoop
+    ld a, [MenuCursorRow]
+    or a
+    jp z, ChangeChannel
     jp RunLoop
+
+    ld a, b
+    and PADF_LEFT
+    jr z, .endLeft
+    ld a, [MenuChannel]
+    dec a
+    ld [MenuChannel], a
+    ld a, 1
+    ld [ChangedChannel], a
+    .endLeft
+    ld a, b
+    and PADF_RIGHT
+    jr z, .endRight
+    ld a, [MenuChannel]
+    inc a
+    ld [MenuChannel], a
+    ld a, 1
+    ld [ChangedChannel], a
+    .endRight
+    jp RunLoop
+
+ChangeChannel:
+    ld a, b
+    and PADF_LEFT
+    jr nz, ChangeChannelDown
+ChangeChannelUp:
+    ld a, [MenuChannel]
+    inc a
+    if_le 4, jr, SetChannelToA
+    ld a, 1
+    jr SetChannelToA
+ChangeChannelDown:
+    ld a, [MenuChannel]
+    dec a
+    jr nz, SetChannelToA
+    ld a, 4
+SetChannelToA:
+    ld [MenuChannel], a
+    ld a, 1
+    ld [ChangedChannel], a
+    jp RunLoop
+
+MoveCursorUp:
+    call StoreNumMenuRowsInB
+    ld a, [MenuCursorRow]
+    or a
+    jr nz, .decrement
+    ld a, b
+    .decrement
+    dec a
+    jr SetCursorRowToA
+MoveCursorDown:
+    call StoreNumMenuRowsInB
+    ld a, [MenuCursorRow]
+    inc a
+    if_lt b, jr, SetCursorRowToA
+    xor a
+SetCursorRowToA:
+    ld [MenuCursorRow], a
+    sla a
+    sla a
+    sla a
+    add 24
+    ld [ObjCursorYPos], a
+    jp RunLoop
+
+;;;=========================================================================;;;
+
+;;; @return b The number of menu rows for the current channel.
+StoreNumMenuRowsInB:
+    ld a, [MenuChannel]
+    if_ge 3, jr, .check3
+    if_ne 1, jr, .is2
+    ld b, 8
+    ret
+    .is2
+    ld b, 6
+    ret
+    .check3
+    if_ne 3, jr, .is4
+    ld b, 5
+    ret
+    .is4
+    ld b, 7
+    ret
+
+;;; Updates the BG map after the channel is changed, then sets ChangedChannel
+;;; to zero.
+UpdateBgForChannel:
+    ld a, [MenuChannel]
+    add "0"
+    ld [VramBgMap + 13 + 1 * 32], a
+    ld [VramBgMap + 5 + 12 * 32], a
+    ld [VramBgMap + 5 + 13 * 32], a
+    ld [VramBgMap + 5 + 14 * 32], a
+    ld [VramBgMap + 5 + 15 * 32], a
+    ld [VramBgMap + 5 + 16 * 32], a
+    xor a
+    ld [ChangedChannel], a
+    ret
 
 ;;;=========================================================================;;;

@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
             byte1 = (byte1 << 1) | (pixel & 1);
             byte2 = (byte2 << 1) | ((pixel >> 1) & 1);
           }
-          fputc(byte2, stdout);
           fputc(byte1, stdout);
+          fputc(byte2, stdout);
         }
       }
     }
