@@ -53,8 +53,8 @@ define compile-asm
 	rgbasm -o $@ $<
 endef
 
-$(OBJDIR)/data.o: $(SRCDIR)/data.asm $(DATADIR)/font.2bpp \
-                  $(DATADIR)/sprites.2bpp
+$(OBJDIR)/data.o: $(SRCDIR)/data.asm $(SRCDIR)/consts.inc \
+                  $(DATADIR)/font.2bpp $(DATADIR)/sprites.2bpp
 	$(compile-asm)
 
 $(OBJDIR)/header.o: $(SRCDIR)/header.asm $(SRCDIR)/hardware.inc
@@ -63,11 +63,14 @@ $(OBJDIR)/header.o: $(SRCDIR)/header.asm $(SRCDIR)/hardware.inc
 $(OBJDIR)/interrupt.o: $(SRCDIR)/interrupt.asm $(SRCDIR)/hardware.inc
 	$(compile-asm)
 
-$(OBJDIR)/main.o: $(SRCDIR)/main.asm $(SRCDIR)/hardware.inc \
-                  $(SRCDIR)/macros.inc
+$(OBJDIR)/main.o: $(SRCDIR)/main.asm $(SRCDIR)/consts.inc \
+                  $(SRCDIR)/hardware.inc $(SRCDIR)/macros.inc
 	$(compile-asm)
 
 $(OBJDIR)/memory.o: $(SRCDIR)/memory.asm
+	$(compile-asm)
+
+$(OBJDIR)/nrvalues.o: $(SRCDIR)/nrvalues.asm
 	$(compile-asm)
 
 $(OBJDIR)/util.o: $(SRCDIR)/util.asm $(SRCDIR)/hardware.inc

@@ -1,3 +1,5 @@
+INCLUDE "src/consts.inc"
+
 ;;;=========================================================================;;;
 
 SECTION "BG-Tile-Data", ROMX
@@ -25,20 +27,20 @@ Strings::
     .envSweepAmt::
     DB "Env sweep:+0", 0
     .freqInit::
-    DB "Frequency: 0000", 0
+    DB "Frequency: {d:INIT_CH1_FREQUENCY}", 0
     .freqSweepAmt::
     DB "Sweep amt:+0", 0
     .freqSweepLen::
     DB "Sweep len: 0", 0
     .reg0::
-    DB "rNR10: %00000000", 0
+    DB "rNR10: %00101101", 0
     .reg1::
     DB "rNR11: %00000000", 0
     .reg2::
-    DB "rNR12: %00000000", 0
+    DB "rNR12: %01000010", 0
     .reg3::
-    DB "rNR13: %00000000", 0
+    DB "rNR13: %{b:INIT_CH1_FREQUENCY_LO}", 0
     .reg4::
-    DB "rNR14: %10000000", 0
+    DB "rNR14: %10000{b:INIT_CH1_FREQUENCY_HI}", 0
 
 ;;;=========================================================================;;;

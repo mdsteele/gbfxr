@@ -1,10 +1,6 @@
+INCLUDE "src/consts.inc"
 INCLUDE "src/hardware.inc"
 INCLUDE "src/macros.inc"
-
-;;;=========================================================================;;;
-
-DPAD_REPEAT_DELAY EQU 24
-DPAD_REPEAT_PERIOD EQU 4
 
 ;;;=========================================================================;;;
 
@@ -24,8 +20,39 @@ Main::
     ld [MenuChannel], a
     xor a
     ld [HoldingDpad], a
+    ld [HoldingStart], a
     ld [MenuCursorRow], a
     ld [ChangedChannel], a
+    ld [Ch1Duty], a
+    ld [Ch1Length], a
+    ld [Ch1EnvStart], a
+    ld [Ch1EnvSweep], a
+    ld [Ch1SweepLen], a
+    ld [Ch1SweepAmp], a
+    ld [Ch2Duty], a
+    ld [Ch2Length], a
+    ld [Ch2EnvStart], a
+    ld [Ch2EnvSweep], a
+    ld [Ch3Length], a
+    ld [Ch3Level], a
+    ld [Ch4Length], a
+    ld [Ch4EnvStart], a
+    ld [Ch4EnvSweep], a
+    ld [Ch4Frequency], a
+    ld [Ch4Step], a
+    ld [Ch4Div], a
+    ld hl, Ch2Frequency
+    ld [hl+], a
+    ld [hl], a
+    ld hl, Ch3Frequency
+    ld [hl+], a
+    ld [hl], a
+
+    ld hl, Ch1Frequency
+    ld a, (INIT_CH1_FREQUENCY & $ff)
+    ld [hl+], a
+    ld a, ((INIT_CH1_FREQUENCY >> 8) & $ff)
+    ld [hl], a
 
     ;; Clear the shadow OAM.
     ld hl, ShadowOam                 ; dest
@@ -113,7 +140,7 @@ Main::
     ;; Enable sound.
     ld a, AUDENA_ON
     ldh [rAUDENA], a
-    ld a, $11
+    ld a, $ff
     ldh [rAUDTERM], a
     ld a, $77
     ldh [rAUDVOL], a
@@ -135,6 +162,20 @@ UpdateBg:
     call nz, UpdateBgForChannel
 ReadButtons:
     call StoreButtonStateInB
+    ld a, b
+    and PADF_START
+    jr z, .startButtonNotHeld
+    ld a, [HoldingStart]
+    or a
+    jr nz, .checkDpad
+    ld a, 1
+    ld [HoldingStart], a
+    call PlaySound
+    jr RunLoop
+    .startButtonNotHeld
+    xor a
+    ld [HoldingStart], a
+    .checkDpad
     ld a, b
     and PADF_UP | PADF_DOWN | PADF_LEFT | PADF_RIGHT
     jr nz, .dpadActive
@@ -232,6 +273,58 @@ SetCursorRowToA:
     jp RunLoop
 
 ;;;=========================================================================;;;
+
+;;; Plays the sound for the current channel.
+;;; @destroy all registers
+PlaySound:
+    ld a, [MenuChannel]
+    if_eq 4, jr, .channel4
+    if_eq 3, jr, .channel3
+    if_eq 2, jr, .channel2
+    .channel1
+    call StoreNR10ValueInA
+    ldh [rNR10], a
+    call StoreNR11ValueInA
+    ldh [rNR11], a
+    call StoreNR12ValueInA
+    ldh [rNR12], a
+    call StoreNR13ValueInA
+    ldh [rNR13], a
+    call StoreNR14ValueInA
+    ldh [rNR14], a
+    ret
+    .channel2
+    call StoreNR21ValueInA
+    ldh [rNR21], a
+    call StoreNR22ValueInA
+    ldh [rNR22], a
+    call StoreNR23ValueInA
+    ldh [rNR23], a
+    call StoreNR24ValueInA
+    ldh [rNR24], a
+    ret
+    .channel3
+    call StoreNR30ValueInA
+    ldh [rNR30], a
+    call StoreNR31ValueInA
+    ldh [rNR31], a
+    call StoreNR32ValueInA
+    ldh [rNR32], a
+    call StoreNR33ValueInA
+    ldh [rNR33], a
+    call StoreNR34ValueInA
+    ldh [rNR34], a
+    ret
+    .channel4
+    call StoreNR41ValueInA
+    ldh [rNR41], a
+    call StoreNR42ValueInA
+    ldh [rNR42], a
+    call StoreNR43ValueInA
+    ldh [rNR43], a
+    call StoreNR44ValueInA
+    ldh [rNR44], a
+    ret
 
 ;;; @return b The number of menu rows for the current channel.
 StoreNumMenuRowsInB:

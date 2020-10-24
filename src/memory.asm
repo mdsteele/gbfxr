@@ -3,13 +3,62 @@ INCLUDE "src/hardware.inc"
 ;;;=========================================================================;;;
 
 SECTION "Menu-State", WRAM0
+
 HoldingDpad::
+    DB
+HoldingStart::
     DB
 MenuCursorRow::
     DB
 MenuChannel::
     DB
 ChangedChannel::
+    DB
+
+Ch1Duty::
+    DB
+Ch1Length::
+    DB
+Ch1EnvStart::
+    DB
+Ch1EnvSweep::
+    DB
+Ch1Frequency::
+    DW
+Ch1SweepLen::
+    DB
+Ch1SweepAmp::
+    DB
+
+Ch2Duty::
+    DB
+Ch2Length::
+    DB
+Ch2EnvStart::
+    DB
+Ch2EnvSweep::
+    DB
+Ch2Frequency::
+    DW
+
+Ch3Length::
+    DB
+Ch3Level::
+    DB
+Ch3Frequency::
+    DW
+
+Ch4Length::
+    DB
+Ch4EnvStart::
+    DB
+Ch4EnvSweep::
+    DB
+Ch4Frequency::
+    DB
+Ch4Step::
+    DB
+Ch4Div::
     DB
 
 ;;;=========================================================================;;;
