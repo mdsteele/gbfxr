@@ -8,7 +8,6 @@ StoreNR10ValueInA::
     ret
 
 ;;; @return a The value to be used for rNR11.
-;;; @destroy hl
 StoreNR11ValueInA::
     ld a, [Ch1Duty]
     rrca

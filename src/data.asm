@@ -19,7 +19,7 @@ Strings::
     .channel::
     DB "Channel:   1", 0
     .duty::
-    DB "Duty:      0", 0
+    DB "Duty:      {d:INIT_CH1_DUTY}", 0
     .length::
     DB "Length:    00", 0
     .envInit::
@@ -35,7 +35,7 @@ Strings::
     .reg0::
     DB "rNR10: %00101101", 0
     .reg1::
-    DB "rNR11: %00000000", 0
+    DB "rNR11: %{b:INIT_CH1_DUTY}000000", 0
     .reg2::
     DB "rNR12: %01000010", 0
     .reg3::

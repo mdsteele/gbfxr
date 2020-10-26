@@ -4,15 +4,23 @@ INCLUDE "src/hardware.inc"
 
 SECTION "Menu-State", WRAM0
 
+MenuStateZero::
 HoldingDpad::
     DB
 HoldingStart::
     DB
+ChangedChannel::
+    DB
+ChangedCh1Duty::
+    DB
+ChangedCh1EnvStart::
+    DB
+ChangedCh1Frequency::
+    DB
 MenuCursorRow::
     DB
+MenuStateZeroEnd::
 MenuChannel::
-    DB
-ChangedChannel::
     DB
 
 Ch1Duty::

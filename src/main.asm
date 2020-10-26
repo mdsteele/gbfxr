@@ -16,14 +16,16 @@ Main::
     call MemCopy
 
     ;; Initialize menu state.
+    ld hl, MenuStateZero                     ; dest
+    ld bc, MenuStateZeroEnd - MenuStateZero  ; count
+    call MemZero
+
     ld a, 1
     ld [MenuChannel], a
-    xor a
-    ld [HoldingDpad], a
-    ld [HoldingStart], a
-    ld [MenuCursorRow], a
-    ld [ChangedChannel], a
+    ld a, INIT_CH1_DUTY
     ld [Ch1Duty], a
+    xor a
+    ld [MenuCursorRow], a
     ld [Ch1Length], a
     ld [Ch1EnvStart], a
     ld [Ch1EnvSweep], a
@@ -159,7 +161,22 @@ RunLoop:
 UpdateBg:
     ld a, [ChangedChannel]
     or a
-    call nz, UpdateBgForChannel
+    jr z, .channelUnchanged
+    call UpdateBgForChannel
+    jr RunLoop
+    .channelUnchanged
+
+    ld a, [ChangedCh1Duty]
+    or a
+    jr z, .ch1DutyUnchanged
+    call UpdateBgForCh1Duty
+    .ch1DutyUnchanged
+
+    ld a, [ChangedCh1Frequency]
+    or a
+    jr z, .ch1FrequencyUnchanged
+    call UpdateBgForCh1Frequency
+    .ch1FrequencyUnchanged
 ReadButtons:
     call StoreButtonStateInB
     ld a, b
@@ -205,48 +222,8 @@ MoveCursor:
     ld a, [MenuCursorRow]
     or a
     jp z, ChangeChannel
-    jp RunLoop
-
-    ld a, b
-    and PADF_LEFT
-    jr z, .endLeft
-    ld a, [MenuChannel]
-    dec a
-    ld [MenuChannel], a
-    ld a, 1
-    ld [ChangedChannel], a
-    .endLeft
-    ld a, b
-    and PADF_RIGHT
-    jr z, .endRight
-    ld a, [MenuChannel]
-    inc a
-    ld [MenuChannel], a
-    ld a, 1
-    ld [ChangedChannel], a
-    .endRight
-    jp RunLoop
-
-ChangeChannel:
-    ld a, b
-    and PADF_LEFT
-    jr nz, ChangeChannelDown
-ChangeChannelUp:
-    ld a, [MenuChannel]
-    inc a
-    if_le 4, jr, SetChannelToA
-    ld a, 1
-    jr SetChannelToA
-ChangeChannelDown:
-    ld a, [MenuChannel]
-    dec a
-    jr nz, SetChannelToA
-    ld a, 4
-SetChannelToA:
-    ld [MenuChannel], a
-    ld a, 1
-    ld [ChangedChannel], a
-    jp RunLoop
+    call ChangeRow
+    jr RunLoop
 
 MoveCursorUp:
     call StoreNumMenuRowsInB
@@ -272,10 +249,108 @@ SetCursorRowToA:
     ld [ObjCursorYPos], a
     jp RunLoop
 
+ChangeChannel:
+    ld a, b
+    and PADF_LEFT
+    jr nz, ChangeChannelDown
+ChangeChannelUp:
+    ld a, [MenuChannel]
+    inc a
+    if_le 4, jr, SetChannelToA
+    ld a, 1
+    jr SetChannelToA
+ChangeChannelDown:
+    ld a, [MenuChannel]
+    dec a
+    jr nz, SetChannelToA
+    ld a, 4
+SetChannelToA:
+    ld [MenuChannel], a
+    ld a, 1
+    ld [ChangedChannel], a
+    jp RunLoop
+
+;;;=========================================================================;;;
+
+;;; Changes the current row value down if LEFT is held, up otherwise.
+;;; @param b The current button state.
+ChangeRow:
+    ld a, [MenuChannel]
+    if_eq 4, jr, ChangeRowCh4
+    if_eq 3, jr, ChangeRowCh3
+    if_eq 2, jr, ChangeRowCh2
+ChangeRowCh1:
+    ld a, [MenuCursorRow]
+    ;; TODO others
+    if_eq 1, jr, ChangeRowCh1Duty
+    if_eq 5, jr, ChangeRowCh1Frequency
+    ret
+ChangeRowCh1Duty:
+    ld a, 1
+    ld [ChangedCh1Duty], a
+    ld a, b
+    and PADF_LEFT
+    jr z, ChangeRowCh1DutyUp
+ChangeRowCh1DutyDown:
+    ld a, [Ch1Duty]
+    sub 1
+    jr nc, .noUnderflow
+    ld a, 3
+    .noUnderflow
+    ld [Ch1Duty], a
+    ret
+ChangeRowCh1DutyUp:
+    ld a, [Ch1Duty]
+    add 1
+    if_lt %100, jr, .noOverflow
+    xor a
+    .noOverflow
+    ld [Ch1Duty], a
+    ret
+ChangeRowCh1Frequency:
+    ld a, 1
+    ld [ChangedCh1Frequency], a
+    ld a, b
+    and PADF_LEFT
+    jr z, ChangeRowCh1FrequencyUp
+ChangeRowCh1FrequencyDown:
+    ld hl, Ch1Frequency
+    ld a, [hl]
+    sub 1
+    ld [hl+], a
+    ld a, [hl]
+    sbc 0
+    jr nc, .noUnderflow
+    ld hl, Ch1Frequency
+    ld a, %11111111
+    ld [hl+], a
+    ld a, %111
+    .noUnderflow
+    ld [hl], a
+    ret
+ChangeRowCh1FrequencyUp:
+    ld hl, Ch1Frequency
+    ld a, [hl]
+    add 1
+    ld [hl+], a
+    ld a, [hl]
+    adc 0
+    if_lt %1000, jr, .noOverflow
+    ld hl, Ch1Frequency
+    xor a
+    ld [hl+], a
+    .noOverflow
+    ld [hl], a
+    ret
+ChangeRowCh2:
+ChangeRowCh3:
+ChangeRowCh4:
+    ;; TODO
+    ret
+
 ;;;=========================================================================;;;
 
 ;;; Plays the sound for the current channel.
-;;; @destroy all registers
 PlaySound:
     ld a, [MenuChannel]
     if_eq 4, jr, .channel4
@@ -357,6 +432,43 @@ UpdateBgForChannel:
     ld [VramBgMap + 5 + 16 * 32], a
     xor a
     ld [ChangedChannel], a
+    ret
+
+;;; Updates the BG map after the ch1 duty is changed, then sets
+;;; ChangedCh1Duty to zero.
+UpdateBgForCh1Duty:
+    ;; Update "Duty" row:
+    ld a, [Ch1Duty]
+    ld hl, VramBgMap + 13 +  2 * 32  ; dest
+    ld e, a                          ; value
+    call Print1DigitU8
+    ;; Update "rNR11" row:
+    call StoreNR11ValueInA
+    ld hl, VramBgMap + 10 + 13 * 32  ; dest
+    ld e, a                          ; value
+    call PrintBinaryU8
+    ret
+
+;;; Updates the BG map after the ch1 frequency is changed, then sets
+;;; ChangedCh1Frequency to zero.
+UpdateBgForCh1Frequency:
+    ;; Update "Frequency" row:
+    ld a, [Ch1Frequency]
+    ld e, a
+    ld a, [Ch1Frequency + 1]
+    ld d, a
+    ld hl, VramBgMap + 13 +  6 * 32  ; dest
+    call Print4DigitU16
+    ;; Update "rNR13" row:
+    call StoreNR13ValueInA
+    ld hl, VramBgMap + 10 + 15 * 32  ; dest
+    ld e, a                          ; value
+    call PrintBinaryU8
+    ;; Update "rNR14" row:
+    call StoreNR14ValueInA
+    ld hl, VramBgMap + 10 + 16 * 32  ; dest
+    ld e, a                          ; value
+    call PrintBinaryU8
     ret
 
 ;;;=========================================================================;;;
