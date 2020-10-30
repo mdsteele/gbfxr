@@ -74,16 +74,11 @@ Ch4Div::
 SECTION "Shadow-OAM", WRAM0, ALIGN[8]
 ShadowOam::
 UNION
-    DS 4 * 40
+    DS sizeof_OAM_ATTRS * OAM_COUNT
 NEXTU
 
-ObjCursorYPos::
-    DB
-ObjCursorXPos::
-    DB
-ObjCursorTile::
-    DB
-    DB
+ObjCursor::
+    DS sizeof_OAM_ATTRS
 
 ENDU
 ShadowOamEnd::

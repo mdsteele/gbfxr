@@ -62,11 +62,11 @@ Main::
     call MemZero
 
     ld a, 24
-    ld [ObjCursorYPos], a
+    ld [ObjCursor + OAMA_Y], a
     ld a, 15
-    ld [ObjCursorXPos], a
+    ld [ObjCursor + OAMA_X], a
     ld a, 1
-    ld [ObjCursorTile], a
+    ld [ObjCursor + OAMA_TILEID], a
 
     ;; Turn off the LCD.
     .waitForVBlank
@@ -246,7 +246,7 @@ SetCursorRowToA:
     sla a
     sla a
     add 24
-    ld [ObjCursorYPos], a
+    ld [ObjCursor + OAMA_Y], a
     jp RunLoop
 
 ChangeChannel:
