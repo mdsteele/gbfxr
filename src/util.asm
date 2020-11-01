@@ -8,7 +8,7 @@ SECTION "Utility-Functions", ROM0
 ;;; @param hl Destination start address.
 ;;; @param de Source start address.
 ;;; @param bc Num bytes to copy.
-MemCopy::
+Func_MemCopy::
     .loop
     ld a, b
     or c
@@ -23,7 +23,7 @@ MemCopy::
 ;;; @param hl Destination start address.
 ;;; @param bc Num bytes to zero.
 ;;; @preserve de
-MemZero::
+Func_MemZero::
     .loop
     ld a, b
     or c
@@ -37,7 +37,7 @@ MemZero::
 ;;; @param hl Destination start address.
 ;;; @param de Source start address.
 ;;; @preserve bc
-StrCopy::
+Func_StrCopy::
     .loop
     ld a, [de]
     or a
@@ -47,24 +47,24 @@ StrCopy::
     jr .loop
 
 ;;; Blocks until the next VBlank, then performs an OAM DMA.
-AwaitRedraw::
+Func_WaitForVblankAndPerformDma::
     di    ; "Lock"
     xor a
-    ldh [VBlankFlag], a
+    ldh [Hram_VBlankFlag], a
     .loop
     ei    ; "Await condition variable" (which is "notified" when an interrupt
     halt  ; occurs).  Note that the effect of an ei is delayed by one
     di    ; instruction, so no interrupt can occur here between ei and halt.
-    ldh a, [VBlankFlag]
+    ldh a, [Hram_VBlankFlag]
     or a
     jr z, .loop
-    call PerformOamDma
+    call Func_PerformDma
     reti  ; "Unlock"
 
 ;;; Reads and returns state of D-pad/buttons.
 ;;; @return b The 8-bit button state.
 ;;; @preserve c, de, hl
-StoreButtonStateInB::
+Func_GetButtonState_b::
     ld a, P1F_GET_DPAD
     ld [rP1], a
     REPT 2  ; It takes a couple cycles to get an accurate reading.
@@ -91,7 +91,7 @@ StoreButtonStateInB::
 ;;; number.
 ;;; @param e The 8-bit value to print (0-255).
 ;;; @param hl The BG map address for the start of the printed number.
-PrintBinaryU8::
+Func_PrintBinaryU8::
     ld c, 9
     .loop
     dec c
@@ -111,7 +111,7 @@ PrintBinaryU8::
 ;;; number.
 ;;; @param e The 8-bit value to print (0-9).
 ;;; @param hl The BG map address for the start of the printed number.
-Print1DigitU8::
+Func_Print1DigitU8::
     ld a, e
     add "0"
     ld [hl], a
@@ -121,7 +121,7 @@ Print1DigitU8::
 ;;; number.
 ;;; @param e The 8-bit value to print (0-99).
 ;;; @param hl The BG map address for the start of the printed number.
-Print2DigitU8::
+Func_Print2DigitU8::
     ;; Convert original value (in e) into BCD.
     xor a
     ld d, 8  ; loop counter
@@ -148,7 +148,7 @@ Print2DigitU8::
 ;;; number.
 ;;; @param e The 8-bit value to print (0-255).
 ;;; @param hl The BG map address for the start of the printed number.
-Print3DigitU8::
+Func_Print3DigitU8::
     ;; Convert original value (in e) into BCD (in bc).
     xor a
     ld b, a
@@ -186,7 +186,7 @@ Print3DigitU8::
 ;;; number.
 ;;; @param de The 16-bit value to print (0-9999).
 ;;; @param hl The BG map address for the start of the printed number.
-Print4DigitU16::
+Func_Print4DigitU16::
     push hl
     ;; Convert high byte of original value (in d) into BCD (in bc).
     xor a

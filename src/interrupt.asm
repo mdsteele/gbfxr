@@ -5,7 +5,7 @@ INCLUDE "src/hardware.inc"
 SECTION "Interrupt-VBlank", ROM0[$0040]
     push af
     ld a, 1
-    ldh [VBlankFlag], a
+    ldh [Hram_VBlankFlag], a
     pop af
     reti
 
@@ -24,7 +24,7 @@ SECTION "Interrupt-Joypad", ROM0[$0060]
 ;;;=========================================================================;;;
 
 SECTION "Interrupt-State", HRAM
-VBlankFlag::
+Hram_VBlankFlag::
     DB
 
 ;;;=========================================================================;;;

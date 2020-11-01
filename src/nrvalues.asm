@@ -3,104 +3,104 @@
 SECTION "NR-Value-Functions", ROM0
 
 ;;; @return a The value to be used for rNR10.
-StoreNR10ValueInA::
+Func_GetNR10Value_a::
     ld a, %00101101  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR11.
-StoreNR11ValueInA::
-    ld a, [Ch1Duty]
+Func_GetNR11Value_a::
+    ld a, [Ram_Ch1Duty]
     rrca
     rrca
-    ld hl, Ch1Length
+    ld hl, Ram_Ch1Length
     or [hl]
     ret
 
 ;;; @return a The value to be used for rNR12.
-StoreNR12ValueInA::
+Func_GetNR12Value_a::
     ld a, %01000010  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR13.
-StoreNR13ValueInA::
-    ld a, [Ch1Frequency]
+Func_GetNR13Value_a::
+    ld a, [Ram_Ch1Frequency_u16]
     ret
 
 ;;; @return a The value to be used for rNR14.
-StoreNR14ValueInA::
-    ld a, [Ch1Length]
+Func_GetNR14Value_a::
+    ld a, [Ram_Ch1Length]
     or a
     jr z, .noLength
-    ld a, [Ch1Frequency + 1]
+    ld a, [Ram_Ch1Frequency_u16 + 1]
     or %11000000
     ret
     .noLength
-    ld a, [Ch1Frequency + 1]
+    ld a, [Ram_Ch1Frequency_u16 + 1]
     or %10000000
     ret
 
 ;;; @return a The value to be used for rNR21.
-StoreNR21ValueInA::
+Func_GetNR21Value_a::
     ld a, %10010000  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR22.
-StoreNR22ValueInA::
+Func_GetNR22Value_a::
     ld a, %01000010  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR23.
-StoreNR23ValueInA::
+Func_GetNR23Value_a::
     ld a, %11100000  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR24.
-StoreNR24ValueInA::
+Func_GetNR24Value_a::
     ld a, %10000111  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR30.
-StoreNR30ValueInA::
+Func_GetNR30Value_a::
     ld a, %00101101  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR31.
-StoreNR31ValueInA::
+Func_GetNR31Value_a::
     ld a, %10010000  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR32.
-StoreNR32ValueInA::
+Func_GetNR32Value_a::
     ld a, %01000010  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR33.
-StoreNR33ValueInA::
+Func_GetNR33Value_a::
     ld a, %11100000  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR34.
-StoreNR34ValueInA::
+Func_GetNR34Value_a::
     ld a, %10000111  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR41.
-StoreNR41ValueInA::
+Func_GetNR41Value_a::
     ld a, %10010000  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR42.
-StoreNR42ValueInA::
+Func_GetNR42Value_a::
     ld a, %01000010  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR43.
-StoreNR43ValueInA::
+Func_GetNR43Value_a::
     ld a, %11100000  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR44.
-StoreNR44ValueInA::
+Func_GetNR44Value_a::
     ld a, %10000111  ; TODO
     ret
 

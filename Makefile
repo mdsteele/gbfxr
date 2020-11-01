@@ -45,12 +45,12 @@ $(DATADIR)/sprites.2bpp: $(SRCDIR)/sprites.ahi $(AHI_TO_2BPP)
 
 $(ROMFILE): $(OBJFILES)
 	@mkdir -p $(@D)
-	rgblink -o $@ $^
+	rgblink --dmg --tiny -o $@ $^
 	rgbfix -v -p 0 $@
 
 define compile-asm
 	@mkdir -p $(@D)
-	rgbasm -o $@ $<
+	rgbasm -Wall -Werror -o $@ $<
 endef
 
 $(OBJDIR)/data.o: $(SRCDIR)/data.asm $(SRCDIR)/consts.inc \

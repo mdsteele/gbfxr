@@ -4,104 +4,104 @@ INCLUDE "src/hardware.inc"
 
 SECTION "Menu-State", WRAM0
 
-MenuStateZero::
-HoldingDpad::
+Ram_MenuStateZero_start::
+Ram_HoldingDpad::
     DB
-HoldingStart::
+Ram_HoldingStart::
     DB
-ChangedChannel::
+Ram_ChangedChannel::
     DB
-ChangedCh1Duty::
+Ram_ChangedCh1Duty::
     DB
-ChangedCh1EnvStart::
+Ram_ChangedCh1EnvStart::
     DB
-ChangedCh1Frequency::
+Ram_ChangedCh1Frequency::
     DB
-MenuCursorRow::
+Ram_MenuCursorRow::
     DB
-MenuStateZeroEnd::
-MenuChannel::
+Ram_MenuStateZero_end::
+Ram_MenuChannel::
     DB
 
-Ch1Duty::
+Ram_Ch1Duty::
     DB
-Ch1Length::
+Ram_Ch1Length::
     DB
-Ch1EnvStart::
+Ram_Ch1EnvStart::
     DB
-Ch1EnvSweep::
+Ram_Ch1EnvSweep::
     DB
-Ch1Frequency::
+Ram_Ch1Frequency_u16::
     DW
-Ch1SweepLen::
+Ram_Ch1SweepLen::
     DB
-Ch1SweepAmp::
+Ram_Ch1SweepAmp::
     DB
 
-Ch2Duty::
+Ram_Ch2Duty::
     DB
-Ch2Length::
+Ram_Ch2Length::
     DB
-Ch2EnvStart::
+Ram_Ch2EnvStart::
     DB
-Ch2EnvSweep::
+Ram_Ch2EnvSweep::
     DB
-Ch2Frequency::
-    DW
-
-Ch3Length::
-    DB
-Ch3Level::
-    DB
-Ch3Frequency::
+Ram_Ch2Frequency_u16::
     DW
 
-Ch4Length::
+Ram_Ch3Length::
     DB
-Ch4EnvStart::
+Ram_Ch3Level::
     DB
-Ch4EnvSweep::
+Ram_Ch3Frequency_u16::
+    DW
+
+Ram_Ch4Length::
     DB
-Ch4Frequency::
+Ram_Ch4EnvStart::
     DB
-Ch4Step::
+Ram_Ch4EnvSweep::
     DB
-Ch4Div::
+Ram_Ch4Frequency::
+    DB
+Ram_Ch4Step::
+    DB
+Ram_Ch4Div::
     DB
 
 ;;;=========================================================================;;;
 
 SECTION "Shadow-OAM", WRAM0, ALIGN[8]
-ShadowOam::
+Ram_ShadowOam_start::
 UNION
     DS sizeof_OAM_ATTRS * OAM_COUNT
 NEXTU
 
-ObjCursor::
+Ram_Cursor_oama::
     DS sizeof_OAM_ATTRS
 
 ENDU
-ShadowOamEnd::
+Ram_ShadowOam_end::
 
 ;;;=========================================================================;;;
 
 SECTION "VRAM", VRAM[$8000]
-VramObjTiles::
+Vram_ObjTiles::
     DS $800
-VramSharedTiles::
+Vram_SharedTiles::
     DS $800
-VramBgTiles::
+Vram_BgTiles::
     DS $800
-VramBgMap::
+Vram_BgMap::
     DS $400
-VramWindowMap::
+Vram_WindowMap::
     DS $400
 
 ;;;=========================================================================;;;
 
-SECTION "OAM-Routine-ROM", ROMX
-OamDmaCode::
-    ld a, HIGH(ShadowOam)
+SECTION "OAM-Routine-ROM", ROM0
+Data_DmaCode_start::
+    ld a, HIGH(Ram_ShadowOam_start)
     ldh [rDMA], a  ; Start DMA transfer.
     ;; We need to wait 160 microseconds for the transfer to complete; the
 	;; following loop takes exactly that long.
@@ -110,17 +110,17 @@ OamDmaCode::
     dec a
     jr nz, .loop
     ret
-OamDmaCodeEnd::
+Data_DmaCode_end::
 
 SECTION "OAM-Routine-HRAM", HRAM
-PerformOamDma::
-    DS OamDmaCodeEnd - OamDmaCode
+Func_PerformDma::
+    DS Data_DmaCode_end - Data_DmaCode_start
 
 ;;;=========================================================================;;;
 
-;;; Store the stack at the back of RAM bank 0.
-SECTION "Stack", WRAM0[$CF00]
+;;; Store the stack at the back of WRAM.
+SECTION "Stack", WRAM0[$DF00]
     DS $100
-InitStackPointer::
+Ram_BottomOfStack::
 
 ;;;=========================================================================;;;

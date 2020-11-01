@@ -38,7 +38,7 @@ ENDM
 ;;;     if_le 9, jr, .label
 ;;; Will jump-relative to .label if a <= 9 (unsigned).
 if_le: MACRO
-  IF (\1) > $fe
+  IF (\1) >= $ff
     \2 \3
   ELSE
     if_lt (\1) + 1, \2, \3
