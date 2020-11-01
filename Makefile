@@ -53,6 +53,10 @@ define compile-asm
 	rgbasm -Wall -Werror -o $@ $<
 endef
 
+$(OBJDIR)/change.o: $(SRCDIR)/change.asm $(SRCDIR)/hardware.inc \
+                    $(SRCDIR)/macros.inc
+	$(compile-asm)
+
 $(OBJDIR)/data.o: $(SRCDIR)/data.asm $(SRCDIR)/consts.inc \
                   $(DATADIR)/font.2bpp $(DATADIR)/sprites.2bpp
 	$(compile-asm)
@@ -67,10 +71,14 @@ $(OBJDIR)/main.o: $(SRCDIR)/main.asm $(SRCDIR)/consts.inc \
                   $(SRCDIR)/hardware.inc $(SRCDIR)/macros.inc
 	$(compile-asm)
 
-$(OBJDIR)/memory.o: $(SRCDIR)/memory.asm
+$(OBJDIR)/nrvalues.o: $(SRCDIR)/nrvalues.asm
 	$(compile-asm)
 
-$(OBJDIR)/nrvalues.o: $(SRCDIR)/nrvalues.asm
+$(OBJDIR)/oam.o: $(SRCDIR)/oam.asm $(SRCDIR)/hardware.inc
+	$(compile-asm)
+
+$(OBJDIR)/state.o: $(SRCDIR)/state.asm $(SRCDIR)/consts.inc \
+                   $(SRCDIR)/hardware.inc
 	$(compile-asm)
 
 $(OBJDIR)/util.o: $(SRCDIR)/util.asm $(SRCDIR)/hardware.inc

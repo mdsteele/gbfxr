@@ -4,63 +4,26 @@ INCLUDE "src/macros.inc"
 
 ;;;=========================================================================;;;
 
+;;; Store the stack at the back of WRAM.
+SECTION "Stack", WRAM0[$DF00]
+    DS $100
+Ram_BottomOfStack:
+
+;;;=========================================================================;;;
+
 SECTION "Main", ROM0[$0150]
 Main::
     ;; Initialize the stack.
     ld sp, Ram_BottomOfStack
 
     ;; Set up the OAM DMA routine.
-    ld hl, Func_PerformDma                        ; dest
-    ld de, Data_DmaCode_start                     ; src
-    ld bc, Data_DmaCode_end - Data_DmaCode_start  ; count
-    call Func_MemCopy
+    call Func_InitDmaCode
 
-    ;; Initialize menu state.
-    ld hl, Ram_MenuStateZero_start                          ; dest
-    ld bc, Ram_MenuStateZero_end - Ram_MenuStateZero_start  ; count
-    call Func_MemZero
+    ;; Initialize RAM state.
+    call Func_InitState
 
-    ld a, 1
-    ld [Ram_MenuChannel], a
-    ld a, INIT_CH1_DUTY
-    ld [Ram_Ch1Duty], a
-    xor a
-    ld [Ram_MenuCursorRow], a
-    ld [Ram_Ch1Length], a
-    ld [Ram_Ch1EnvStart], a
-    ld [Ram_Ch1EnvSweep], a
-    ld [Ram_Ch1SweepLen], a
-    ld [Ram_Ch1SweepAmp], a
-    ld [Ram_Ch2Duty], a
-    ld [Ram_Ch2Length], a
-    ld [Ram_Ch2EnvStart], a
-    ld [Ram_Ch2EnvSweep], a
-    ld [Ram_Ch3Length], a
-    ld [Ram_Ch3Level], a
-    ld [Ram_Ch4Length], a
-    ld [Ram_Ch4EnvStart], a
-    ld [Ram_Ch4EnvSweep], a
-    ld [Ram_Ch4Frequency], a
-    ld [Ram_Ch4Step], a
-    ld [Ram_Ch4Div], a
-    ld hl, Ram_Ch2Frequency_u16
-    ld [hl+], a
-    ld [hl], a
-    ld hl, Ram_Ch3Frequency_u16
-    ld [hl+], a
-    ld [hl], a
-
-    ld hl, Ram_Ch1Frequency_u16
-    ld a, LOW(INIT_CH1_FREQUENCY)
-    ld [hl+], a
-    ld a, HIGH(INIT_CH1_FREQUENCY)
-    ld [hl], a
-
-    ;; Clear the shadow OAM.
-    ld hl, Ram_ShadowOam_start                      ; dest
-    ld bc, Ram_ShadowOam_end - Ram_ShadowOam_start  ; count
-    call Func_MemZero
-
+    ;; Initialize the shadow OAM.
+    call Func_ClearOam
     ld a, 24
     ld [Ram_Cursor_oama + OAMA_Y], a
     ld a, 15
@@ -158,7 +121,7 @@ Main::
 
 RunLoop:
     call Func_WaitForVblankAndPerformDma
-UpdateBg:
+
     ld a, [Ram_ChangedChannel]
     or a
     jr z, .channelUnchanged
@@ -177,6 +140,7 @@ UpdateBg:
     jr z, .ch1FrequencyUnchanged
     call Func_UpdateBgForCh1Frequency
     .ch1FrequencyUnchanged
+
 ReadButtons:
     call Func_GetButtonState_b
     ld a, b
@@ -209,6 +173,7 @@ ReadButtons:
     if_eq 1, jr, MoveCursor
     if_eq DPAD_REPEAT_DELAY, jr, MoveCursor
     jr RunLoop
+
 MoveCursor:
     ld a, b
     and PADF_DOWN
@@ -218,11 +183,7 @@ MoveCursor:
     jp nz, MoveCursorUp
     ld a, b
     and PADF_LEFT | PADF_RIGHT
-    jp z, RunLoop
-    ld a, [Ram_MenuCursorRow]
-    or a
-    jp z, ChangeChannel
-    call Func_ChangeRowValue
+    call nz, Func_ChangeRowValue
     jr RunLoop
 
 MoveCursorUp:
@@ -242,111 +203,11 @@ MoveCursorDown:
     xor a
 SetCursorRowToA:
     ld [Ram_MenuCursorRow], a
-    sla a
-    sla a
-    sla a
+    swap a
+    srl a
     add 24
     ld [Ram_Cursor_oama + OAMA_Y], a
     jp RunLoop
-
-ChangeChannel:
-    ld a, b
-    and PADF_LEFT
-    jr nz, ChangeChannelDown
-ChangeChannelUp:
-    ld a, [Ram_MenuChannel]
-    inc a
-    if_le 4, jr, SetChannelToA
-    ld a, 1
-    jr SetChannelToA
-ChangeChannelDown:
-    ld a, [Ram_MenuChannel]
-    dec a
-    jr nz, SetChannelToA
-    ld a, 4
-SetChannelToA:
-    ld [Ram_MenuChannel], a
-    ld a, 1
-    ld [Ram_ChangedChannel], a
-    jp RunLoop
-
-;;;=========================================================================;;;
-
-;;; Changes the current row value down if LEFT is held, up otherwise.
-;;; @param b The current button state.
-Func_ChangeRowValue:
-    ld a, [Ram_MenuChannel]
-    if_eq 4, jr, _ChangeRowValue_Ch4
-    if_eq 3, jr, _ChangeRowValue_Ch3
-    if_eq 2, jr, _ChangeRowValue_Ch2
-_ChangeRowValue_Ch1:
-    ld a, [Ram_MenuCursorRow]
-    ;; TODO others
-    if_eq 1, jr, _ChangeRowValue_Ch1Duty
-    if_eq 5, jr, _ChangeRowValue_Ch1Frequency
-    ret
-_ChangeRowValue_Ch1Duty:
-    ld a, 1
-    ld [Ram_ChangedCh1Duty], a
-    ld a, b
-    and PADF_LEFT
-    jr z, _ChangeRowValue_Ch1DutyUp
-_ChangeRowValue_Ch1DutyDown:
-    ld a, [Ram_Ch1Duty]
-    sub 1
-    jr nc, .noUnderflow
-    ld a, 3
-    .noUnderflow
-    ld [Ram_Ch1Duty], a
-    ret
-_ChangeRowValue_Ch1DutyUp:
-    ld a, [Ram_Ch1Duty]
-    add 1
-    if_lt %100, jr, .noOverflow
-    xor a
-    .noOverflow
-    ld [Ram_Ch1Duty], a
-    ret
-_ChangeRowValue_Ch1Frequency:
-    ld a, 1
-    ld [Ram_ChangedCh1Frequency], a
-    ld a, b
-    and PADF_LEFT
-    jr z, _ChangeRowValue_Ch1FrequencyUp
-_ChangeRowValue_Ch1FrequencyDown:
-    ld hl, Ram_Ch1Frequency_u16
-    ld a, [hl]
-    sub 1
-    ld [hl+], a
-    ld a, [hl]
-    sbc 0
-    jr nc, .noUnderflow
-    ld hl, Ram_Ch1Frequency_u16
-    ld a, %11111111
-    ld [hl+], a
-    ld a, %111
-    .noUnderflow
-    ld [hl], a
-    ret
-_ChangeRowValue_Ch1FrequencyUp:
-    ld hl, Ram_Ch1Frequency_u16
-    ld a, [hl]
-    add 1
-    ld [hl+], a
-    ld a, [hl]
-    adc 0
-    if_lt %1000, jr, .noOverflow
-    ld hl, Ram_Ch1Frequency_u16
-    xor a
-    ld [hl+], a
-    .noOverflow
-    ld [hl], a
-    ret
-_ChangeRowValue_Ch2:
-_ChangeRowValue_Ch3:
-_ChangeRowValue_Ch4:
-    ;; TODO
-    ret
 
 ;;;=========================================================================;;;
 
