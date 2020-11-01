@@ -22,7 +22,7 @@ Data_DutyLabel_str::
 Data_LengthLabel_str::
     DB "Length:    00", 0
 Data_EnvStartLabel_str::
-    DB "Env start: 00", 0
+    DB "Env start: {d:INIT_CH1_ENV_START}", 0
 Data_EnvSweepLabel_str::
     DB "Env sweep:+0", 0
 Data_FrequencyLabel_str::
@@ -36,7 +36,7 @@ Data_Reg0Label_str::
 Data_Reg1Label_str::
     DB "rNR11: %{b:INIT_CH1_DUTY}000000", 0
 Data_Reg2Label_str::
-    DB "rNR12: %01000010", 0
+    DB "rNR12: %{b:INIT_CH1_ENV_START}0010", 0
 Data_Reg3Label_str::
     DB "rNR13: %{b:INIT_CH1_FREQUENCY_LO}", 0
 Data_Reg4Label_str::

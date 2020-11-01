@@ -11,6 +11,7 @@ Ram_HoldingDpad::
     DB
 Ram_HoldingStart::
     DB
+
 Ram_ChangedChannel::
     DB
 Ram_ChangedCh1Duty::
@@ -19,9 +20,11 @@ Ram_ChangedCh1EnvStart::
     DB
 Ram_ChangedCh1Frequency::
     DB
+
 Ram_MenuCursorRow::
     DB
-Ram_MenuChannel::
+
+Ram_Channel::
     DB
 
 Ram_Ch1Duty::
@@ -84,9 +87,11 @@ Func_InitState::
     call Func_MemZero
     ;; Initialize variables:
     ld a, 1
-    ld [Ram_MenuChannel], a
+    ld [Ram_Channel], a
     ld a, INIT_CH1_DUTY
     ld [Ram_Ch1Duty], a
+    ld a, INIT_CH1_ENV_START
+    ld [Ram_Ch1EnvStart], a
     ld a, LOW(INIT_CH1_FREQUENCY)
     ld [Ram_Ch1Frequency_u16 + 0], a
     ld a, HIGH(INIT_CH1_FREQUENCY)

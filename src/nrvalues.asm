@@ -18,7 +18,9 @@ Func_GetNR11Value_a::
 
 ;;; @return a The value to be used for rNR12.
 Func_GetNR12Value_a::
-    ld a, %01000010  ; TODO
+    ld a, [Ram_Ch1EnvStart]
+    swap a
+    or %0010  ; TODO
     ret
 
 ;;; @return a The value to be used for rNR13.

@@ -135,6 +135,12 @@ RunLoop:
     call Func_UpdateBgForCh1Duty
     .ch1DutyUnchanged
 
+    ld a, [Ram_ChangedCh1EnvStart]
+    or a
+    jr z, .ch1EnvStartUnchanged
+    call Func_UpdateBgForCh1EnvStart
+    .ch1EnvStartUnchanged
+
     ld a, [Ram_ChangedCh1Frequency]
     or a
     jr z, .ch1FrequencyUnchanged
@@ -213,7 +219,7 @@ SetCursorRowToA:
 
 ;;; Plays the sound for the current channel.
 Func_PlaySound:
-    ld a, [Ram_MenuChannel]
+    ld a, [Ram_Channel]
     if_eq 4, jr, .channel4
     if_eq 3, jr, .channel3
     if_eq 2, jr, .channel2
@@ -264,7 +270,7 @@ Func_PlaySound:
 
 ;;; @return b The number of menu rows for the current channel.
 Func_GetNumMenuRows_b:
-    ld a, [Ram_MenuChannel]
+    ld a, [Ram_Channel]
     if_ge 3, jr, .check3
     if_ne 1, jr, .is2
     ld b, 8
@@ -283,7 +289,7 @@ Func_GetNumMenuRows_b:
 ;;; Updates the BG map after the channel is changed, then sets
 ;;; Ram_ChangedChannel to zero.
 Func_UpdateBgForChannel:
-    ld a, [Ram_MenuChannel]
+    ld a, [Ram_Channel]
     add "0"
     ld [Vram_BgMap + 13 + 1 * SCRN_VX_B], a
     ld [Vram_BgMap + 5 + 12 * SCRN_VX_B], a
@@ -306,6 +312,21 @@ Func_UpdateBgForCh1Duty:
     ;; Update "rNR11" row:
     call Func_GetNR11Value_a
     ld hl, Vram_BgMap + 10 + 13 * SCRN_VX_B  ; dest
+    ld e, a                                  ; value
+    call Func_PrintBinaryU8
+    ret
+
+;;; Updates the BG map after the ch1 env start is changed, then sets
+;;; Ram_ChangedCh1EnvStart to zero.
+Func_UpdateBgForCh1EnvStart:
+    ;; Update "Env start" row:
+    ld a, [Ram_Ch1EnvStart]
+    ld hl, Vram_BgMap + 13 +  4 * SCRN_VX_B  ; dest
+    ld e, a                                  ; value
+    call Func_Print2DigitU8
+    ;; Update "rNR12" row:
+    call Func_GetNR12Value_a
+    ld hl, Vram_BgMap + 10 + 14 * SCRN_VX_B  ; dest
     ld e, a                                  ; value
     call Func_PrintBinaryU8
     ret

@@ -53,8 +53,8 @@ define compile-asm
 	rgbasm -Wall -Werror -o $@ $<
 endef
 
-$(OBJDIR)/change.o: $(SRCDIR)/change.asm $(SRCDIR)/hardware.inc \
-                    $(SRCDIR)/macros.inc
+$(OBJDIR)/change.o: $(SRCDIR)/change.asm $(SRCDIR)/consts.inc \
+                    $(SRCDIR)/hardware.inc $(SRCDIR)/macros.inc
 	$(compile-asm)
 
 $(OBJDIR)/data.o: $(SRCDIR)/data.asm $(SRCDIR)/consts.inc \

@@ -1,3 +1,4 @@
+INCLUDE "src/consts.inc"
 INCLUDE "src/hardware.inc"
 INCLUDE "src/macros.inc"
 
@@ -11,7 +12,7 @@ Func_ChangeRowValue::
     ld a, [Ram_MenuCursorRow]
     or a
     jr z, _ChangeRowValue_Channel
-    ld a, [Ram_MenuChannel]
+    ld a, [Ram_Channel]
     if_eq 1, jp, _ChangeRowValue_Ch1
     if_eq 2, jp, _ChangeRowValue_Ch2
     if_eq 3, jp, _ChangeRowValue_Ch3
@@ -25,26 +26,27 @@ _ChangeRowValue_Channel:
     and PADF_LEFT
     jr nz, _ChangeRowValue_ChannelDown
 _ChangeRowValue_ChannelUp:
-    ld a, [Ram_MenuChannel]
+    ld a, [Ram_Channel]
     inc a
     if_le 4, jr, .noOverflow
     ld a, 1
     .noOverflow
-    ld [Ram_MenuChannel], a
+    ld [Ram_Channel], a
     ret
 _ChangeRowValue_ChannelDown:
-    ld a, [Ram_MenuChannel]
+    ld a, [Ram_Channel]
     dec a
     jr nz, .noUnderflow
     ld a, 4
     .noUnderflow
-    ld [Ram_MenuChannel], a
+    ld [Ram_Channel], a
     ret
 
 _ChangeRowValue_Ch1:
     ld a, [Ram_MenuCursorRow]
     ;; TODO others
     if_eq 1, jr, _ChangeRowValue_Ch1Duty
+    if_eq 3, jr, _ChangeRowValue_Ch1EnvStart
     if_eq 5, jr, _ChangeRowValue_Ch1Frequency
     ret
 
@@ -58,17 +60,40 @@ _ChangeRowValue_Ch1DutyDown:
     ld a, [Ram_Ch1Duty]
     sub 1
     jr nc, .noUnderflow
-    ld a, 3
+    ld a, MAX_CH1_DUTY
     .noUnderflow
     ld [Ram_Ch1Duty], a
     ret
 _ChangeRowValue_Ch1DutyUp:
     ld a, [Ram_Ch1Duty]
     add 1
-    if_lt %100, jr, .noOverflow
+    if_le MAX_CH1_DUTY, jr, .noOverflow
     xor a
     .noOverflow
     ld [Ram_Ch1Duty], a
+    ret
+
+_ChangeRowValue_Ch1EnvStart:
+    ld a, 1
+    ld [Ram_ChangedCh1EnvStart], a
+    ld a, b
+    and PADF_LEFT
+    jr z, _ChangeRowValue_Ch1EnvStartUp
+_ChangeRowValue_Ch1EnvStartDown:
+    ld a, [Ram_Ch1EnvStart]
+    sub 1
+    jr nc, .noUnderflow
+    ld a, MAX_CH1_ENV_START
+    .noUnderflow
+    ld [Ram_Ch1EnvStart], a
+    ret
+_ChangeRowValue_Ch1EnvStartUp:
+    ld a, [Ram_Ch1EnvStart]
+    add 1
+    if_le MAX_CH1_ENV_START, jr, .noOverflow
+    xor a
+    .noOverflow
+    ld [Ram_Ch1EnvStart], a
     ret
 
 _ChangeRowValue_Ch1Frequency:
