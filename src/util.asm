@@ -1,4 +1,5 @@
 INCLUDE "src/hardware.inc"
+INCLUDE "src/macros.inc"
 
 ;;;=========================================================================;;;
 
@@ -113,6 +114,30 @@ Func_PrintBinaryU8::
 ;;; @param hl The BG map address for the start of the printed number.
 Func_Print1DigitU8::
     ld a, e
+    add "0"
+    ld [hl], a
+    ret
+
+;;; Prints a signed 8-bit value to the background map as a 1-digit decimal
+;;; number, with a sign if nonzero.
+;;; @param e The signed 8-bit value to print (-9-+9).
+;;; @param hl The BG map address for the start of the printed number.
+Func_Print1DigitI8::
+    ld a, e
+    if_neg jr, .negative
+    ld a, "+"
+    ld [hl+], a
+    jr .printE
+    .negative
+    ld a, "-"
+    ld [hl+], a
+    ld a, e
+    cpl
+    add 1
+    jr .printA
+    .printE
+    ld a, e
+    .printA
     add "0"
     ld [hl], a
     ret

@@ -18,6 +18,8 @@ Ram_ChangedCh1Duty::
     DB
 Ram_ChangedCh1EnvStart::
     DB
+Ram_ChangedCh1EnvSweep::
+    DB
 Ram_ChangedCh1Frequency::
     DB
 
@@ -33,7 +35,7 @@ Ram_Ch1Length::
     DB
 Ram_Ch1EnvStart::
     DB
-Ram_Ch1EnvSweep::
+Ram_Ch1EnvSweep_i8::
     DB
 Ram_Ch1Frequency_u16::
     DW
@@ -92,6 +94,8 @@ Func_InitState::
     ld [Ram_Ch1Duty], a
     ld a, INIT_CH1_ENV_START
     ld [Ram_Ch1EnvStart], a
+    ld a, INIT_CH1_ENV_SWEEP_I8
+    ld [Ram_Ch1EnvSweep_i8], a
     ld a, LOW(INIT_CH1_FREQUENCY)
     ld [Ram_Ch1Frequency_u16 + 0], a
     ld a, HIGH(INIT_CH1_FREQUENCY)

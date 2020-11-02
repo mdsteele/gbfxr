@@ -1,3 +1,5 @@
+INCLUDE "src/macros.inc"
+
 ;;;=========================================================================;;;
 
 SECTION "NR-Value-Functions", ROM0
@@ -20,7 +22,17 @@ Func_GetNR11Value_a::
 Func_GetNR12Value_a::
     ld a, [Ram_Ch1EnvStart]
     swap a
-    or %0010  ; TODO
+    ld b, a
+    ld a, [Ram_Ch1EnvSweep_i8]
+    if_neg jr, .signNeg
+    cpl
+    add 1
+    jr .signEnd
+    .signNeg
+    xor %1000
+    .signEnd
+    and %1111
+    or b
     ret
 
 ;;; @return a The value to be used for rNR13.

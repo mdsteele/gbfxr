@@ -57,8 +57,8 @@ $(OBJDIR)/change.o: $(SRCDIR)/change.asm $(SRCDIR)/consts.inc \
                     $(SRCDIR)/hardware.inc $(SRCDIR)/macros.inc
 	$(compile-asm)
 
-$(OBJDIR)/data.o: $(SRCDIR)/data.asm $(SRCDIR)/consts.inc \
-                  $(DATADIR)/font.2bpp $(DATADIR)/sprites.2bpp
+$(OBJDIR)/data.o: $(SRCDIR)/data.asm $(DATADIR)/font.2bpp \
+                  $(DATADIR)/sprites.2bpp
 	$(compile-asm)
 
 $(OBJDIR)/header.o: $(SRCDIR)/header.asm $(SRCDIR)/hardware.inc
@@ -71,7 +71,7 @@ $(OBJDIR)/main.o: $(SRCDIR)/main.asm $(SRCDIR)/consts.inc \
                   $(SRCDIR)/hardware.inc $(SRCDIR)/macros.inc
 	$(compile-asm)
 
-$(OBJDIR)/nrvalues.o: $(SRCDIR)/nrvalues.asm
+$(OBJDIR)/nrvalues.o: $(SRCDIR)/nrvalues.asm $(SRCDIR)/macros.inc
 	$(compile-asm)
 
 $(OBJDIR)/oam.o: $(SRCDIR)/oam.asm $(SRCDIR)/hardware.inc
@@ -81,7 +81,8 @@ $(OBJDIR)/state.o: $(SRCDIR)/state.asm $(SRCDIR)/consts.inc \
                    $(SRCDIR)/hardware.inc
 	$(compile-asm)
 
-$(OBJDIR)/util.o: $(SRCDIR)/util.asm $(SRCDIR)/hardware.inc
+$(OBJDIR)/util.o: $(SRCDIR)/util.asm $(SRCDIR)/hardware.inc \
+                  $(SRCDIR)/macros.inc
 	$(compile-asm)
 
 #=============================================================================#

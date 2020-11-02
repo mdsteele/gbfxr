@@ -97,10 +97,10 @@ Main::
     ld de, Data_Reg4Label_str               ; src
     call Func_StrCopy
 
-    ;; Initialize obj palettes.
-    ld a, %11100100
-    ldh [rOBP0], a
-    ldh [rOBP1], a
+    call Func_UpdateBgForCh1Duty
+    call Func_UpdateBgForCh1EnvStart
+    call Func_UpdateBgForCh1EnvSweep
+    call Func_UpdateBgForCh1Frequency
 
     ;; Enable sound.
     ld a, AUDENA_ON
@@ -141,6 +141,12 @@ RunLoop:
     call Func_UpdateBgForCh1EnvStart
     .ch1EnvStartUnchanged
 
+    ld a, [Ram_ChangedCh1EnvSweep]
+    or a
+    jr z, .ch1EnvSweepUnchanged
+    call Func_UpdateBgForCh1EnvSweep
+    .ch1EnvSweepUnchanged
+
     ld a, [Ram_ChangedCh1Frequency]
     or a
     jr z, .ch1FrequencyUnchanged
@@ -149,6 +155,7 @@ RunLoop:
 
 ReadButtons:
     call Func_GetButtonState_b
+    ;; TODO: Turn off all sound when SELECT is pressed.
     ld a, b
     and PADF_START
     jr z, .startButtonNotHeld
@@ -178,7 +185,7 @@ ReadButtons:
     ld [Ram_HoldingDpad], a
     if_eq 1, jr, MoveCursor
     if_eq DPAD_REPEAT_DELAY, jr, MoveCursor
-    jr RunLoop
+    jp RunLoop
 
 MoveCursor:
     ld a, b
@@ -190,7 +197,7 @@ MoveCursor:
     ld a, b
     and PADF_LEFT | PADF_RIGHT
     call nz, Func_ChangeRowValue
-    jr RunLoop
+    jp RunLoop
 
 MoveCursorUp:
     call Func_GetNumMenuRows_b
@@ -286,9 +293,13 @@ Func_GetNumMenuRows_b:
     ld b, 7
     ret
 
-;;; Updates the BG map after the channel is changed, then sets
+;;;=========================================================================;;;
+
+;;; Updates the BG map after the channel is changed, and sets
 ;;; Ram_ChangedChannel to zero.
 Func_UpdateBgForChannel:
+    xor a
+    ld [Ram_ChangedChannel], a
     ld a, [Ram_Channel]
     add "0"
     ld [Vram_BgMap + 13 + 1 * SCRN_VX_B], a
@@ -297,13 +308,13 @@ Func_UpdateBgForChannel:
     ld [Vram_BgMap + 5 + 14 * SCRN_VX_B], a
     ld [Vram_BgMap + 5 + 15 * SCRN_VX_B], a
     ld [Vram_BgMap + 5 + 16 * SCRN_VX_B], a
-    xor a
-    ld [Ram_ChangedChannel], a
     ret
 
-;;; Updates the BG map after the ch1 duty is changed, then sets
+;;; Updates the BG map after the ch1 duty is changed, and sets
 ;;; Ram_ChangedCh1Duty to zero.
 Func_UpdateBgForCh1Duty:
+    xor a
+    ld [Ram_ChangedCh1Duty], a
     ;; Update "Duty" row:
     ld a, [Ram_Ch1Duty]
     ld hl, Vram_BgMap + 13 +  2 * SCRN_VX_B  ; dest
@@ -316,24 +327,37 @@ Func_UpdateBgForCh1Duty:
     call Func_PrintBinaryU8
     ret
 
-;;; Updates the BG map after the ch1 env start is changed, then sets
+;;; Updates the BG map after the ch1 env start is changed, and sets
 ;;; Ram_ChangedCh1EnvStart to zero.
 Func_UpdateBgForCh1EnvStart:
+    xor a
+    ld [Ram_ChangedCh1EnvStart], a
     ;; Update "Env start" row:
     ld a, [Ram_Ch1EnvStart]
     ld hl, Vram_BgMap + 13 +  4 * SCRN_VX_B  ; dest
     ld e, a                                  ; value
     call Func_Print2DigitU8
     ;; Update "rNR12" row:
-    call Func_GetNR12Value_a
-    ld hl, Vram_BgMap + 10 + 14 * SCRN_VX_B  ; dest
-    ld e, a                                  ; value
-    call Func_PrintBinaryU8
-    ret
+    jp Func_UpdateBgForNR12
 
-;;; Updates the BG map after the ch1 frequency is changed, then sets
+;;; Updates the BG map after the ch1 env start is changed, and sets
+;;; Ram_ChangedCh1EnvStart to zero.
+Func_UpdateBgForCh1EnvSweep:
+    xor a
+    ld [Ram_ChangedCh1EnvSweep], a
+    ;; Update "Env start" row:
+    ld a, [Ram_Ch1EnvSweep_i8]
+    ld e, a                                  ; value
+    ld hl, Vram_BgMap + 13 +  5 * SCRN_VX_B  ; dest
+    call Func_Print1DigitI8
+    ;; Update "rNR12" row:
+    jp Func_UpdateBgForNR12
+
+;;; Updates the BG map after the ch1 frequency is changed, and sets
 ;;; Ram_ChangedCh1Frequency to zero.
 Func_UpdateBgForCh1Frequency:
+    xor a
+    ld [Ram_ChangedCh1Frequency], a
     ;; Update "Frequency" row:
     ld a, [Ram_Ch1Frequency_u16]
     ld e, a
@@ -349,6 +373,16 @@ Func_UpdateBgForCh1Frequency:
     ;; Update "rNR14" row:
     call Func_GetNR14Value_a
     ld hl, Vram_BgMap + 10 + 16 * SCRN_VX_B  ; dest
+    ld e, a                                  ; value
+    call Func_PrintBinaryU8
+    ret
+
+;;;=========================================================================;;;
+
+;;; Updates the BG map with the current value of NR12.
+Func_UpdateBgForNR12:
+    call Func_GetNR12Value_a
+    ld hl, Vram_BgMap + 10 + 14 * SCRN_VX_B  ; dest
     ld e, a                                  ; value
     call Func_PrintBinaryU8
     ret

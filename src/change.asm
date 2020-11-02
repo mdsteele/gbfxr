@@ -47,6 +47,7 @@ _ChangeRowValue_Ch1:
     ;; TODO others
     if_eq 1, jr, _ChangeRowValue_Ch1Duty
     if_eq 3, jr, _ChangeRowValue_Ch1EnvStart
+    if_eq 4, jr, _ChangeRowValue_Ch1EnvSweep
     if_eq 5, jr, _ChangeRowValue_Ch1Frequency
     ret
 
@@ -96,7 +97,33 @@ _ChangeRowValue_Ch1EnvStartUp:
     ld [Ram_Ch1EnvStart], a
     ret
 
+_ChangeRowValue_Ch1EnvSweep:
+    ld a, 1
+    ld [Ram_ChangedCh1EnvSweep], a
+    ld a, b
+    and PADF_LEFT
+    jr z, _ChangeRowValue_Ch1EnvSweepUp
+_ChangeRowValue_Ch1EnvSweepDown:
+    ld a, [Ram_Ch1EnvSweep_i8]
+    sub 1
+    if_nonneg jr, .noUnderflow
+    if_ge MIN_CH1_ENV_SWEEP_I8, jr, .noUnderflow
+    ld a, MAX_CH1_ENV_SWEEP_I8
+    .noUnderflow
+    ld [Ram_Ch1EnvSweep_i8], a
+    ret
+_ChangeRowValue_Ch1EnvSweepUp:
+    ld a, [Ram_Ch1EnvSweep_i8]
+    add 1
+    if_neg jr, .noOverflow
+    if_le MAX_CH1_ENV_SWEEP_I8, jr, .noOverflow
+    ld a, MIN_CH1_ENV_SWEEP_I8
+    .noOverflow
+    ld [Ram_Ch1EnvSweep_i8], a
+    ret
+
 _ChangeRowValue_Ch1Frequency:
+    ;; TODO: Increment/decrement by 10s/100s/1000s if A/B/both are held
     ld a, 1
     ld [Ram_ChangedCh1Frequency], a
     ld a, b
