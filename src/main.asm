@@ -156,8 +156,7 @@ RunLoop:
 ReadButtons:
     call Func_GetButtonState_b
     ;; TODO: Turn off all sound when SELECT is pressed.
-    ld a, b
-    and PADF_START
+    bit PADB_START, b
     jr z, .startButtonNotHeld
     ld a, [Ram_HoldingStart]
     or a
@@ -188,11 +187,9 @@ ReadButtons:
     jp RunLoop
 
 MoveCursor:
-    ld a, b
-    and PADF_DOWN
+    bit PADB_DOWN, b
     jp nz, MoveCursorDown
-    ld a, b
-    and PADF_UP
+    bit PADB_UP, b
     jp nz, MoveCursorUp
     ld a, b
     and PADF_LEFT | PADF_RIGHT

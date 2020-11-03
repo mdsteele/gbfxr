@@ -22,8 +22,7 @@ Func_ChangeRowValue::
 _ChangeRowValue_Channel:
     ld a, 1
     ld [Ram_ChangedChannel], a
-    ld a, b
-    and PADF_LEFT
+    bit PADB_LEFT, b
     jr nz, _ChangeRowValue_ChannelDown
 _ChangeRowValue_ChannelUp:
     ld a, [Ram_Channel]
@@ -54,8 +53,7 @@ _ChangeRowValue_Ch1:
 _ChangeRowValue_Ch1Duty:
     ld a, 1
     ld [Ram_ChangedCh1Duty], a
-    ld a, b
-    and PADF_LEFT
+    bit PADB_LEFT, b
     jr z, _ChangeRowValue_Ch1DutyUp
 _ChangeRowValue_Ch1DutyDown:
     ld a, [Ram_Ch1Duty]
@@ -77,8 +75,7 @@ _ChangeRowValue_Ch1DutyUp:
 _ChangeRowValue_Ch1EnvStart:
     ld a, 1
     ld [Ram_ChangedCh1EnvStart], a
-    ld a, b
-    and PADF_LEFT
+    bit PADB_LEFT, b
     jr z, _ChangeRowValue_Ch1EnvStartUp
 _ChangeRowValue_Ch1EnvStartDown:
     ld a, [Ram_Ch1EnvStart]
@@ -100,8 +97,7 @@ _ChangeRowValue_Ch1EnvStartUp:
 _ChangeRowValue_Ch1EnvSweep:
     ld a, 1
     ld [Ram_ChangedCh1EnvSweep], a
-    ld a, b
-    and PADF_LEFT
+    bit PADB_LEFT, b
     jr z, _ChangeRowValue_Ch1EnvSweepUp
 _ChangeRowValue_Ch1EnvSweepDown:
     ld a, [Ram_Ch1EnvSweep_i8]
@@ -123,38 +119,49 @@ _ChangeRowValue_Ch1EnvSweepUp:
     ret
 
 _ChangeRowValue_Ch1Frequency:
-    ;; TODO: Increment/decrement by 10s/100s/1000s if A/B/both are held
+    bit PADB_B, b
+    jr nz, .deltaHundred
+    bit PADB_A, b
+    jr nz, .deltaTen
+    .deltaOne
+    ld d, 1
+    jr .deltaEnd
+    .deltaTen
+    ld d, 10
+    jr .deltaEnd
+    .deltaHundred
+    ld d, 100
+    .deltaEnd
     ld a, 1
     ld [Ram_ChangedCh1Frequency], a
-    ld a, b
-    and PADF_LEFT
+    bit PADB_LEFT, b
     jr z, _ChangeRowValue_Ch1FrequencyUp
 _ChangeRowValue_Ch1FrequencyDown:
     ld hl, Ram_Ch1Frequency_u16
     ld a, [hl]
-    sub 1
+    sub d
     ld [hl+], a
     ld a, [hl]
     sbc 0
     jr nc, .noUnderflow
     ld hl, Ram_Ch1Frequency_u16
-    ld a, %11111111
+    xor a
     ld [hl+], a
-    ld a, %111
     .noUnderflow
     ld [hl], a
     ret
 _ChangeRowValue_Ch1FrequencyUp:
     ld hl, Ram_Ch1Frequency_u16
     ld a, [hl]
-    add 1
+    add d
     ld [hl+], a
     ld a, [hl]
     adc 0
     if_lt %1000, jr, .noOverflow
     ld hl, Ram_Ch1Frequency_u16
-    xor a
+    ld a, %11111111
     ld [hl+], a
+    ld a, %111
     .noOverflow
     ld [hl], a
     ret
