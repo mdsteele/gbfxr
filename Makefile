@@ -9,6 +9,7 @@ ROMFILE = $(OUTDIR)/gbfxr.gb
 AHI_TO_2BPP = $(BINDIR)/ahi_to_2bpp
 
 ASMFILES := $(shell find $(SRCDIR) -name '*.asm')
+INCFILES := $(shell find $(SRCDIR) -name '*.inc')
 OBJFILES := $(patsubst $(SRCDIR)/%.asm,$(OBJDIR)/%.o,$(ASMFILES))
 
 #=============================================================================#
@@ -30,16 +31,9 @@ $(AHI_TO_2BPP): build/ahi_to_2bpp.c
 	@mkdir -p $(@D)
 	cc -o $@ $<
 
-define convert-ahi
+$(DATADIR)/%.2bpp: $(SRCDIR)/%.ahi $(AHI_TO_2BPP)
 	@mkdir -p $(@D)
 	$(AHI_TO_2BPP) < $< > $@
-endef
-
-$(DATADIR)/font.2bpp: $(SRCDIR)/font.ahi $(AHI_TO_2BPP)
-	$(convert-ahi)
-
-$(DATADIR)/sprites.2bpp: $(SRCDIR)/sprites.ahi $(AHI_TO_2BPP)
-	$(convert-ahi)
 
 #=============================================================================#
 
@@ -53,36 +47,11 @@ define compile-asm
 	rgbasm -Wall -Werror -o $@ $<
 endef
 
-$(OBJDIR)/change.o: $(SRCDIR)/change.asm $(SRCDIR)/consts.inc \
-                    $(SRCDIR)/hardware.inc $(SRCDIR)/macros.inc
-	$(compile-asm)
-
 $(OBJDIR)/data.o: $(SRCDIR)/data.asm $(DATADIR)/font.2bpp \
                   $(DATADIR)/sprites.2bpp
 	$(compile-asm)
 
-$(OBJDIR)/header.o: $(SRCDIR)/header.asm $(SRCDIR)/hardware.inc
-	$(compile-asm)
-
-$(OBJDIR)/interrupt.o: $(SRCDIR)/interrupt.asm $(SRCDIR)/hardware.inc
-	$(compile-asm)
-
-$(OBJDIR)/main.o: $(SRCDIR)/main.asm $(SRCDIR)/consts.inc \
-                  $(SRCDIR)/hardware.inc $(SRCDIR)/macros.inc
-	$(compile-asm)
-
-$(OBJDIR)/nrvalues.o: $(SRCDIR)/nrvalues.asm $(SRCDIR)/macros.inc
-	$(compile-asm)
-
-$(OBJDIR)/oam.o: $(SRCDIR)/oam.asm $(SRCDIR)/hardware.inc
-	$(compile-asm)
-
-$(OBJDIR)/state.o: $(SRCDIR)/state.asm $(SRCDIR)/consts.inc \
-                   $(SRCDIR)/hardware.inc
-	$(compile-asm)
-
-$(OBJDIR)/util.o: $(SRCDIR)/util.asm $(SRCDIR)/hardware.inc \
-                  $(SRCDIR)/macros.inc
+$(OBJDIR)/%.o: $(SRCDIR)/%.asm $(INCFILES)
 	$(compile-asm)
 
 #=============================================================================#
